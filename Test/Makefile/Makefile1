@@ -1,0 +1,12 @@
+test: main.o print.o 
+	g++ -o test main.o print.o
+
+main.o: main.cpp print.h
+	g++ -c main.cpp
+
+
+print.o: print.cpp print.h
+	g++ -c print.cpp
+
+clean:
+	rm -rf *.o test

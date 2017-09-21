@@ -1,0 +1,13 @@
+OBJS = main.o print.o
+
+test: $(OBJS)
+	g++ -o test $(OBJS)
+
+main.o: main.cpp print.h
+	g++ -c main.cpp
+
+print.o: print.cpp print.h
+	g++ -c print.cpp
+
+clean:
+	rm -rf $(OBJS)
