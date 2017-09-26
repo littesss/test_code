@@ -12,8 +12,9 @@ void fun(const char * pchar)
 int main()
 {
 //    char* Pchar = new char[100];
-    //string* Pstr = new string;
     const char * Pchar = "hello"; // "hello"常量 ，const接受
     fun(Pchar);
+    string a = "hello";
+    cout << a.c_str() << endl;
     return 0;
 }
