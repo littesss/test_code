@@ -74,6 +74,44 @@ SIGSTOP   20 停止信号ctrl+z
 #sleep(second); 让进程休眠多少秒后在执行
 #pause(); 挂起进程，直到有信号被中断，返回值只有-1；
 ================================================================================
+                    message queue:消息队列
+4. int msgget(key_t key, int msgflg);
+   key_t 是消息队列的标示，
+   msgflg, 是创建消息队列的flag   包括IPC_CREAT and IPC_EXCL
+   成功返回：消息队列的标示符msgid  失败返回：-1
 
+   struct msgbuf 
+   {
+       long mtype;       /* message type, must be > 0 */
+       char mtext[BUFSIZ];    /* message data *///BUFSIZ 是宏定义的8k大小
+   };
 
+  int msgsnd(int msqid, const void *msgp, size_t msgsz, int msgflg);
+  向消息队列发送消息，失败返回-1.成功返回0
+  第二个参数是（void*）类型的msgbuf的结构体
+  第三个参数是 BUFSIZ
+  第四个参数是 一般为0，这个参数依然是是控制函数行为的标志，取值可以是：0,表示忽略；IPC_NOWAIT，如果消息队列为空，则返回一个ENOMSG，并将控制权交回调用函数的进程。如果不指定这个参数，那么进程将被阻塞直到函数可以从队列中得到符合条件的消息为止。如果一个client 正在等待消息的时候队列被删除，EIDRM 就会被返回。如果进程在阻塞等待过程中收到了系统的中断信号，EINTR 就会被返回。MSG_NOERROR，如果函数取得的消息长度大于msgsz，将只返回msgsz 长度的信息，剩下的部分被丢弃了。如果不指定这个参数，E2BIG 将被返回，而消息则留在队列中不被取出。当消息从队列内取出后，相应的消息就从队列中删除了。
+ 
+  ssize_t msgrcv(int msqid, void *msgp, size_t msgsz, long msgtyp, int msgflg);
+  从消息队列里获取消息，失败返回-1.成功返回0
+  msgtyp：消息类型
+  msgtyp等于0 则返回队列的最早的一个消息。
+  msgtyp大于0，则返回其类型为mtype的第一个消息。
+  msgtyp小于0,则返回其类型小于或等于mtype参数的绝对值的最小的一个消息。
 
+  int msgctl(int msqid, int cmd, struct msqid_ds *buf);
+  msgctl系统调用对msqid标识的消息队列执行cmd操作列。
+  IPC_STAT
+  读取消息队列的数据结构msqid_ds，并将其存储在b u f指定的地址中。
+  IPC_SET
+  设置消息队列的数据结构msqid_ds中的ipc_perm元素的值。这个值取自buf参数。
+  IPC_RMID
+  从系统内核中移走消息队列。
+
+消息队列和管道的区别：
+    消息队列：数据结构，存放在内存中，读取速度快
+    管道： 文件,存放在磁盘中，读取要经过缓冲区
+    都只能一端读，一端写，半双工通信 
+#用到的函数 msgget msgsnd msgrcv msgctl strcpy strncmp fgts
+#fgets(buff, 512, stdin) // 从标准输入里获取512自己大小的数据存放到buff里
+===============================================================================
