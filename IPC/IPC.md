@@ -42,11 +42,38 @@
 2. int mkfifo("pathname",0666);//创建一个管道文件
   a. 成功返回0，失败返回-1；
   b. 非血缘关系的进程之间的通信
-  c. 也是半双工通信
-  d. 一个进程读，另外一个进程写
+  c. 也是半双工通信;
+  d. 一个进程读，另外一个进程写;
 
 用到的函数： mkfifo  open read write lseek close
 #lseek(fd,2,SEEK_SET);
 ===============================================================================
+                        signal:信号
+3. typedef void (*sighandler_t)(int);
+   sighandler_t signal(int signum, sighandler_t handler);
+  
+   void signalhandle(int signum);
+   void  (*signal(int signum,void(*gsignalregist)(int))  (int)
+   
+   注册信号处理函数
+   signal(2, signalhandle );  //调用信号处理函数signalhandle, 其中该函数自己定义
+   signal(3, SIG_IGN);        // 信号忽略
+   signal(20, SIG_DFL);       // 信号默认处理
+
+查看所有信号：kill -l         //64种信号
+SIGHUP    1   挂起信号
+SIGINT    2   中断信号ctrl+c
+SIGQUIT   3  退出信号ctrl+\
+SIGKILL   9  杀死进程
+SIGALRM   14 闹钟信号
+SIGTERM   15 终端信号
+SIGSTOP   20 停止信号ctrl+z
+ 
+用到函数：signal  alarm sleep 
+#alarm(second); 定时多少秒后给进程发送SIGALAM（14），成功返回0
+#sleep(second); 让进程休眠多少秒后在执行
+#pause(); 挂起进程，直到有信号被中断，返回值只有-1；
+================================================================================
+
 
 
