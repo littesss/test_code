@@ -90,7 +90,14 @@ SIGSTOP   20 停止信号ctrl+z
   向消息队列发送消息，失败返回-1.成功返回0
   第二个参数是（void*）类型的msgbuf的结构体
   第三个参数是 BUFSIZ
-  第四个参数是 一般为0，这个参数依然是是控制函数行为的标志，取值可以是：0,表示忽略；IPC_NOWAIT，如果消息队列为空，则返回一个ENOMSG，并将控制权交回调用函数的进程。如果不指定这个参数，那么进程将被阻塞直到函数可以从队列中得到符合条件的消息为止。如果一个client 正在等待消息的时候队列被删除，EIDRM 就会被返回。如果进程在阻塞等待过程中收到了系统的中断信号，EINTR 就会被返回。MSG_NOERROR，如果函数取得的消息长度大于msgsz，将只返回msgsz 长度的信息，剩下的部分被丢弃了。如果不指定这个参数，E2BIG 将被返回，而消息则留在队列中不被取出。当消息从队列内取出后，相应的消息就从队列中删除了。
+  第四个参数是 一般为0，这个参数依然是是控制函数行为的标志，取值可以是：0,表示忽略；
+  IPC_NOWAIT，如果消息队列为空，则返回一个ENOMSG，并将控制权交回调用函 数的进程。如
+  果不指定这个参数，那么进程将被阻塞直到函数可以从队列中得到符合条件的消息为止。如
+  果一个client 正在等待消息的时候队列被删除，EIDRM 就会被返回。如果进程在阻塞等待
+  过程中收到了系统的中断信号，EINTR 就会被返回。MSG_NOERROR，如果函数取得的消息长
+  度大于msgsz，将只返回msgsz 长度的信息，剩下的部分被丢弃了。如果不指定这个参数，
+  E2BIG 将被返回，而消息则留在队列中不被取出。当消息从队列内取出后，相应的消息就
+  从队列中删除了。
  
   ssize_t msgrcv(int msqid, void *msgp, size_t msgsz, long msgtyp, int msgflg);
   从消息队列里获取消息，失败返回-1.成功返回0
@@ -100,7 +107,7 @@ SIGSTOP   20 停止信号ctrl+z
   msgtyp小于0,则返回其类型小于或等于mtype参数的绝对值的最小的一个消息。
 
   int msgctl(int msqid, int cmd, struct msqid_ds *buf);
-  msgctl系统调用对msqid标识的消息队列执行cmd操作列。
+  msgctl系统调用对msqid标识的消息队列执行cmd操作列。 
   IPC_STAT
   读取消息队列的数据结构msqid_ds，并将其存储在b u f指定的地址中。
   IPC_SET
@@ -115,3 +122,22 @@ SIGSTOP   20 停止信号ctrl+z
 #用到的函数 msgget msgsnd msgrcv msgctl strcpy strncmp fgts
 #fgets(buff, 512, stdin) // 从标准输入里获取512自己大小的数据存放到buff里
 ===============================================================================
+                    share memory :共享内存
+5. int shmget(key_t key, size_t size, int shmflg);
+  int shmid = ((key_t)1234, 1024, 0666|IPC_CREAT);
+  创建一个消息队列，成功返回共享内存ID号，失败返回-1；
+  key:类似消息队列的标识，这个是共享内存的标识
+  size：大小
+  shmflg: 共享内存的标识0666|IPC_CREAT
+
+  void *shmat(int shmid, const void *shmaddr, int shmflg);
+  char * addr shmat(shmid, 0, 0)
+  把物理内存映射到进程空间中，成功返回共享内存地址，失败返回（void*）-1;
+  shmaaddr : 0 系统自动帮我们找到所需地址
+  shmflg: 一般情况为0，和消息队列mode 一样，前面已经设置过了
+#用到的函数 shmget shmat shmdt移除消息队列 shmctl类似与消息队列的msgctl
+#if(!strncmp(buff,"end",3)) // 判断buff是否和end 相同
+#fgets(buff,1024, stdin) // 从标准输入流中输入数据
+=============================================================================
+
+
