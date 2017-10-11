@@ -19,10 +19,14 @@ void fun1(char* str) // 数组是连续的只需传首地址就行了
 int main()
 {
     char str[] = "hello";
+    
+    cout << sizeof(str) << endl; //6
     fun(str);
 
     int * p = NULL;
     cout << sizeof(p) << endl; // 64位 8字节
     fun1(str);
+
+
     return 0;
 }
