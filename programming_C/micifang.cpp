@@ -18,9 +18,16 @@ int fun(int a, int n) // 2^3 = 8
     }
     return sum;
 }
+
+void fun1(int * a, int n)
+{
+    *a <<= n-1;
+}
 int main()
 {
-    int a=2;
-    cout << fun(2,2) << endl;    
+    int a=3;
+    cout << fun(a,2) << endl;    
+    fun1(&a, 2);
+    cout << a << endl;
     return 0;
 }
