@@ -76,3 +76,7 @@ E
 解决：
 git push origin HEAD:master --force 
 
+
+#git clone none project
+git push -u origin master
+
