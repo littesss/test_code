@@ -8,6 +8,7 @@
 #include<iostream>
 using namespace std;
 
+//懒汉式：不初始化，需要的时候才创建对象
 class singleton
 {
     public:
@@ -20,6 +21,7 @@ class singleton
         if(instance == NULL)
         {
             instance = new singleton;
+          //instance = new singleton(); //理解为构造singleton类的一个无惨构造
         }
         return instance;
     }

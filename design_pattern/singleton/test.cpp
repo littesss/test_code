@@ -37,9 +37,10 @@ class A
 };
 int main()
 {
-    A aa;
-    A* bb = new A();
-    A* cc = new A;
+    A aa;//A aa();  系统会认为是函数声明
+    A bbb(); //函数声明
+    //A* bb = new A();
+    //A* cc = new A;
     //cout << aa << endl;
    /* cout << aa->a << endl;
     cout << aa.b << endl;
