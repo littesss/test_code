@@ -14,6 +14,20 @@ using namespace std;
 #include <stdio.h>
 #include <string.h>
 
+void do_server(int conn)
+{
+    char recvbuf[512];
+    while(1)
+    {
+        memset(recvbuf, 0, sizeof(recvbuf));
+        int ret = read(conn, recvbuf, sizeof(recvbuf));
+        fputs(recvbuf, stdout);//会得到\n
+        write(conn, recvbuf, ret);
+    }
+    close(conn);
+}
+
+
 int main()
 {
     int listenfd;
@@ -30,7 +44,14 @@ int main()
     servaddr.sin_port = htons(8881);
     servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
     /*servaddr.sin_addr.s_addr = inet_addr("127.0.0.1")*/
-    
+
+////////////////////////////getsockopt///////////    
+    int on = 1;//开启地址重复利用
+    if(setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0)
+    {
+        perror("setsockopt");
+    }
+//////////////////////////////////////////////////
     if(bind(listenfd, (struct sockaddr*)&servaddr, sizeof(servaddr)) < 0)
     {
         perror("bind a local addr to listenfd failed...");
@@ -50,21 +71,29 @@ int main()
     struct sockaddr_in peeraddr;
     socklen_t peerlen = sizeof(peeraddr);//必须初始值
     int conn;
-    if((conn = accept(listenfd, (struct sockaddr*)&peeraddr, &peerlen)) < 0)
-    {
-        perror("accept client connect failed...");
-        exit(1);
-    }
-    char recvbuf[512];
+
+//多进程处理多客户端连接
+    pid_t pid;
     while(1)
     {
-        memset(recvbuf, 0, sizeof(recvbuf));
-        int ret = read(conn, recvbuf, sizeof(recvbuf));
-        fputs(recvbuf, stdout);//会得到\n
-        write(conn, recvbuf, ret);
+        if((conn = accept(listenfd, (struct sockaddr*)&peeraddr, &peerlen)) < 0)
+        {
+            perror("accept client connect failed...");
+            exit(1);
+        }
+        cout << "Ip:" << inet_ntoa(peeraddr.sin_addr) << " port:" << ntohs(peeraddr.sin_port) << endl;
+        
+        pid = fork();
+        if(pid < 0)
+        {
+            perror("fork");
+            exit(1);
+        }
+        if(pid == 0) // 子进程处理客户端连接
+        {
+            close(listenfd);
+            do_server(conn);
+        }
     }
-
-    close(conn);
-    close(listenfd);
     return 0;
 }
