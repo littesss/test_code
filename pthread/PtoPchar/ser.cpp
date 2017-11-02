@@ -96,7 +96,7 @@ int main()
         perror("conn");
         exit(1);
     }
-//多进程处理多客户端连接
+//多进程实现点对点连接
     pid_t pid;
     int status = 0;
     pid = fork();
@@ -136,15 +136,14 @@ int main()
             }
             fputs(recvbuf, stdout);
         }
-        close(conn);
-        close(listenfd);
         cout << "parent close" << endl; 
         kill(pid, SIGUSR1);
 
-        wait(&status);  // 等待子进程结束
     }
     close(listenfd);
     close(conn);
+
+    wait(&status);  // 等待子进程结束
     cout << "last code will be executed????" << endl;
-      return 0;
+    return 0;
 }

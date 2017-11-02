@@ -1,5 +1,5 @@
 .PHONY: clean 
-BIN=singleton test singleton1 Singleton question
+BIN=singleton test singleton1 Singleton question t ttt
 all:$(BIN)
 
 %.o:%.cpp
