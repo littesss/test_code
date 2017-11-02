@@ -9,6 +9,8 @@ using namespace std;
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <signal.h>
+#include <sys/wait.h>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -37,6 +39,13 @@ void do_server(int conn)
     close(conn);
 }
 
+void handler(int sig)
+{
+    cout << "recv sig=" << sig << endl;
+   // close(conn);
+   // close(listenfd);
+    exit(0);
+}
 
 int main()
 {
@@ -81,29 +90,61 @@ int main()
     struct sockaddr_in peeraddr;
     socklen_t peerlen = sizeof(peeraddr);//必须初始值
     int conn;
-
+    conn = accept(listenfd, (struct sockaddr*)&peeraddr, &peerlen);
+    if(conn < 0)
+    {
+        perror("conn");
+        exit(1);
+    }
 //多进程处理多客户端连接
     pid_t pid;
-    while(1)
+    int status = 0;
+    pid = fork();
+    if(pid == -1)
     {
-        if((conn = accept(listenfd, (struct sockaddr*)&peeraddr, &peerlen)) < 0)
-        {
-            perror("accept client connect failed...");
-            exit(1);
-        }
-        cout << "Ip:" << inet_ntoa(peeraddr.sin_addr) << " port:" << ntohs(peeraddr.sin_port) << endl;
-        
-        pid = fork();
-        if(pid < 0)
-        {
-            perror("fork");
-            exit(1);
-        }
-        if(pid == 0) // 子进程处理客户端连接
-        {
-            close(listenfd);
-            do_server(conn);
-        }
+        perror("fork");
     }
-    return 0;
+    if(pid == 0)
+    {
+        char sendbuf[1024] = {0};
+        signal(SIGUSR1, handler);
+        while(fgets(sendbuf, sizeof(sendbuf), stdin) != NULL)
+        {
+            write(conn, sendbuf, strlen(sendbuf));
+            memset(sendbuf, 0, sizeof(sendbuf));
+        }
+        cout << "以下代码不会执行到的" << endl;
+        close(conn);
+        exit(0);
+    }
+    else
+    {
+        char recvbuf[1024];
+        while(1)
+        {
+            memset(recvbuf, 0, 1024);
+            int ret = read(conn, recvbuf, sizeof(recvbuf));
+            if(ret == -1)
+            {
+                perror("read");
+                exit(1);
+            }
+            else if(ret == 0) 
+            {
+                printf("peer close\n");
+                break;
+            }
+            fputs(recvbuf, stdout);
+        }
+        close(conn);
+        close(listenfd);
+        cout << "parent close" << endl; 
+        kill(pid, SIGUSR1);
+
+        wait(&status);  // 等待子进程结束
+    }
+    close(listenfd);
+    close(conn);
+    cout << "last code will be executed????" << endl;
+      return 0;
 }
