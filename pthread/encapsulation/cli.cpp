@@ -15,6 +15,12 @@ using namespace std;
 #include <stdio.h>
 #include <string.h>
 
+struct packet
+{
+    int  len;        //包头
+    char buf[1024];  //包体，实际长度
+};
+
 ssize_t readn(int fd, void* buf, size_t count)
 {
     size_t nleft = count;
@@ -54,7 +60,8 @@ ssize_t writen(int fd, const void* buf, size_t count)
         }
         else if(nwritten == 0)
         {
-            return count-nleft;
+            continue;
+            //return count-nleft;
         }
         bufp += nwritten;
         nleft -= nwritten;
@@ -78,7 +85,6 @@ int main()
     servaddr.sin_port = htons(8881);
     //servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
     servaddr.sin_addr.s_addr = inet_addr("127.0.0.1");
-
     //connect ,发起连接
     if(connect(sock, (struct sockaddr*)&servaddr, sizeof(servaddr)) < 0) 
     {
@@ -86,14 +92,47 @@ int main()
         exit(1);
     }
 
-    char sendbuf[1024] = {0};
-    char recvbuf[1024] = {0};
-    while(fgets(sendbuf, sizeof(sendbuf), stdin) != NULL)
+    struct packet sendbuf;
+    struct packet recvbuf;
+    memset(&sendbuf, 0, sizeof(sendbuf));
+    memset(&recvbuf, 0, sizeof(recvbuf));
+    int n;
+    while(fgets(sendbuf.buf, sizeof(sendbuf.buf), stdin) != NULL)
     {
-        writen(sock, sendbuf, strlen(sendbuf));
-        readn(sock, recvbuf, sizeof(recvbuf));
-        fputs(recvbuf,stdout);
-        memset(recvbuf, 0, sizeof(recvbuf));
+        n = strlen(sendbuf.buf);
+
+        sendbuf.len = htonl(n); //网络字节序
+        
+        writen(sock, &sendbuf, 4+n);//sizeof()发送定长包
+        
+        int ret = readn(sock, &recvbuf.len, 4);
+        if(ret == -1)
+        {
+            perror("read");
+            exit(1);
+        }
+        if(ret < 4)
+        {
+            cout << "clien close\n";
+            break;
+        }
+       
+        n = ntohl(recvbuf.len);
+        readn(sock, &recvbuf.buf, n);
+        if(ret == -1)
+        {
+            perror("read");
+            exit(1);
+        }
+        if(ret < n)
+        {
+            cout << "clien close\n";
+            break;
+        }
+        
+        fputs(recvbuf.buf,stdout);
+        memset(recvbuf.buf, 0, sizeof(recvbuf.buf));
+        memset(sendbuf.buf, 0 ,sizeof(sendbuf.buf));
     }
     
     close(sock);

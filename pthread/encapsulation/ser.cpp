@@ -15,29 +15,42 @@ using namespace std;
 #include <stdio.h>
 #include <string.h>
 
+//处理粘包问题
+//封装read函数
+
+struct packet
+{
+    int  len;        //包头
+    char buf[1024];  //包体，实际长度
+};
 ssize_t readn(int fd, void* buf, size_t count)
 {
-    size_t nleft = count;
-    ssize_t nread;
+    size_t nleft = count;//剩余的字节数
+    ssize_t nread;       //已经接受的字节数
     char* bufp = (char*)buf;
 
     while(nleft > 0)
     {
         if((nread = read(fd, bufp, nleft))<0)
         {
-            if(errno == EINTR)
+            cout << " < 0" << endl;
+            if(errno == EINTR) //信号打断
                 continue;
             return -1;
         }
         else if(nread == 0)
         {
+            cout << " = 0" << endl;
+            //break;
             return count-nleft;
         }
-        bufp += nread;
+        cout << " > 0" << endl;
+        bufp += nread;//偏移到屁股
         nleft -= nread;
     }
     return count;
 }
+//封装write方法
 ssize_t writen(int fd, const void* buf, size_t count)
 {
     size_t nleft = count;
@@ -48,13 +61,14 @@ ssize_t writen(int fd, const void* buf, size_t count)
     {
         if((nwritten = write(fd, bufp, nleft)) < 0)
         {
-            if(errno == EINTR)
+            if(errno == EINTR) //信号中断
                 continue;
             return -1;
         }
         else if(nwritten == 0)
         {
-            return count-nleft;
+            continue;
+           //return count-nleft;
         }
         bufp += nwritten;
         nleft -= nwritten;
@@ -64,23 +78,37 @@ ssize_t writen(int fd, const void* buf, size_t count)
 /////////////////////////////////////
 void do_server(int conn)
 {
-    char recvbuf[512];
+    struct packet recvbuf;
     while(1)
     {
-        memset(recvbuf, 0, sizeof(recvbuf));
-        int ret = readn(conn, recvbuf, sizeof(recvbuf));
-        if(ret == 0)
-        {
-            printf("client close\n");
-            break;
-        }
-        else if(ret == -1)//避免死循环
+        memset(recvbuf.buf, 0, sizeof(recvbuf.buf));
+        int ret = readn(conn, &recvbuf.len, 4);
+        if(ret == -1)
         {
             perror("read");
+            exit(1);
+        }
+        if(ret < 4)
+        {
+            cout << "clien close\n";
             break;
         }
-        fputs(recvbuf, stdout);//会得到\n
-        writen(conn, recvbuf, ret);
+       
+        int n = ntohl(recvbuf.len);
+        readn(conn, &recvbuf.buf, n);
+        if(ret == -1)
+        {
+            perror("read");
+            exit(1);
+        }
+        if(ret < n)
+        {
+            cout << "clien close\n";
+            break;
+        }
+        fputs(recvbuf.buf, stdout);
+        writen(conn, &recvbuf, 4+n);
+
     }
     close(conn);
 }
@@ -130,7 +158,7 @@ int main()
     socklen_t peerlen = sizeof(peeraddr);//必须初始值
     int conn;
 
-//多进程处理多客户端连接
+///多进程处理多客户端连接
     pid_t pid;
     while(1)
     {
