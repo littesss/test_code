@@ -23,6 +23,7 @@ struct packet
     int  len;        //包头
     char buf[1024];  //包体，实际长度
 };
+
 ssize_t readn(int fd, void* buf, size_t count)
 {
     size_t nleft = count;//剩余的字节数
@@ -40,16 +41,14 @@ ssize_t readn(int fd, void* buf, size_t count)
         }
         else if(nread == 0)
         {
-            cout << " = 0" << endl;
-            //break;
             return count-nleft;
         }
-        cout << " > 0" << endl;
         bufp += nread;//偏移到屁股
         nleft -= nread;
     }
     return count;
 }
+
 //封装write方法
 ssize_t writen(int fd, const void* buf, size_t count)
 {
@@ -82,20 +81,21 @@ void do_server(int conn)
     while(1)
     {
         memset(recvbuf.buf, 0, sizeof(recvbuf.buf));
-        int ret = readn(conn, &recvbuf.len, 4);
+        int ret = readn(conn, &recvbuf.len, 4);//先读包头
         if(ret == -1)
         {
             perror("read");
             exit(1);
         }
-        if(ret < 4)
+        else if(ret < 4)
         {
             cout << "clien close\n";
             break;
         }
-       
-        int n = ntohl(recvbuf.len);
-        readn(conn, &recvbuf.buf, n);
+
+        int n = ntohl(recvbuf.len); //必须网络字节序转换成主机字节序
+
+        ret = readn(conn, &recvbuf.buf, n);//再读包体
         if(ret == -1)
         {
             perror("read");
@@ -107,7 +107,7 @@ void do_server(int conn)
             break;
         }
         fputs(recvbuf.buf, stdout);
-        writen(conn, &recvbuf, 4+n);
+        writen(conn, &recvbuf, 4+n); //回射服务器，回射给客户端
 
     }
     close(conn);

@@ -97,7 +97,7 @@ int main()
     memset(&sendbuf, 0, sizeof(sendbuf));
     memset(&recvbuf, 0, sizeof(recvbuf));
     int n;
-    while(fgets(sendbuf.buf, sizeof(sendbuf.buf), stdin) != NULL)
+    while(fgets(sendbuf.buf, sizeof(sendbuf.buf), stdin) != NULL)//从标准输入中读去数据到sendbuf.buf中去
     {
         n = strlen(sendbuf.buf);
 
@@ -111,14 +111,14 @@ int main()
             perror("read");
             exit(1);
         }
-        if(ret < 4)
+        else if(ret < 4)
         {
             cout << "clien close\n";
             break;
         }
        
         n = ntohl(recvbuf.len);
-        readn(sock, &recvbuf.buf, n);
+        ret = readn(sock, &recvbuf.buf, n);
         if(ret == -1)
         {
             perror("read");

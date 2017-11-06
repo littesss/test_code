@@ -1,13 +1,14 @@
 CFLAGS = -g
-SRC = $(wildcard *.c)
-TARGET = $(patsubst %.c, %, $(SRC))
+CXX = g++
+SRC = $(wildcard *.cpp)
+TARGET = $(patsubst %.cpp, %, $(SRC))
 
 #.PHONY:all clean
 
 all: $(TARGET)
 
-%:%.c
-	$(CC) $(CFLAGS) $^ -o $@
+%:%.cpp
+	$(CXX) $(CFLAGS) $^ -o $@
 
 .PHONY:clean
 clean:
