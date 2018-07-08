@@ -14,7 +14,14 @@ int main()
 
 	token = strtok(arr, "/");
 	printf("strtok():[%s]\n", token);
-    return 0;
+    
+	while(token)
+	{
+		token = strtok(NULL, "/");
+		printf("strtok():[%s]\n", token);
+	}
+
+	return 0;
 }
 
 
