@@ -7,7 +7,8 @@
 
 int main()
 {
-    printf("strtok()\n");
+	char *arr = "12/0.2/12.22/13/";
+	printf("strtok()\n");
     return 0;
 }
 
